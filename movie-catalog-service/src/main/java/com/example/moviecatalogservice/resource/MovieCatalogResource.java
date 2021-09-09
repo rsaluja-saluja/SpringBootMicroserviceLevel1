@@ -11,6 +11,7 @@ import org.springframework.web.client.RestTemplate;
 
 import com.example.moviecatalogservice.models.CatalogItem;
 import com.example.moviecatalogservice.models.Movie;
+import com.example.moviecatalogservice.models.Rating;
 import com.example.moviecatalogservice.models.UserRating;
 
 @RestController
@@ -35,15 +36,18 @@ public class MovieCatalogResource {
 		 UserRating userRating = restTemplate.getForObject("http://rating-data-service/ratings/"+userId, UserRating.class) ;
 		
 		//For every movie id call Movie service to get movie information and Put them all together
-		List<CatalogItem> catalogItem = userRating.getRatingsList().stream().map(
-				rating -> {
-					//Movie movie = restTemplate.getForObject("http://localhost:8082/movies/"+rating.getMovieId(), Movie.class);
-					Movie movie = restTemplate.getForObject("http://movie-info-service/movies/"+rating.getMovieId(), Movie.class);
-
-					return new CatalogItem(movie.getMovieId(), movie.getMovieDesc(),rating.getRating());
-				}).collect(Collectors.toList());
+		List<CatalogItem> catalogItem = userRating.getRatingsList().stream()
+				.map(rating -> getCatalogItem(rating))
+				.collect(Collectors.toList());
 		
 		
 		return catalogItem;
+	}
+
+	private CatalogItem getCatalogItem(Rating rating) {
+		//Movie movie = restTemplate.getForObject("http://localhost:8082/movies/"+rating.getMovieId(), Movie.class);
+		Movie movie = restTemplate.getForObject("http://movie-info-service/movies/"+rating.getMovieId(), Movie.class);
+
+		return new CatalogItem(movie.getName(), movie.getMovieDesc(),rating.getRating());
 	}
 }
